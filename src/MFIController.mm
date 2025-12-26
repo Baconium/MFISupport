@@ -1,4 +1,4 @@
-#ifdef GEODE_IS_IOS
+#if defined(GEODE_IS_IOS) || (defined(__APPLE__) && defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
 
 // Import Objective-C frameworks FIRST, before any Cocos2d headers
 #import <GameController/GameController.h>
@@ -134,4 +134,4 @@ bool MFIControllerManager::isControllerConnected() {
     return s_controllerState.isConnected;
 }
 
-#endif // GEODE_IS_IOS
+#endif // GEODE_IS_IOS or TARGET_OS_IPHONE

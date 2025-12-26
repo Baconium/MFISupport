@@ -2,7 +2,7 @@
 
 using namespace geode::prelude;
 
-#ifdef GEODE_IS_IOS
+#if defined(GEODE_IS_IOS) || (defined(__APPLE__) && defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
 
 // Include our C++ interface (no Objective-C types)
 #include "MFIController.h"
@@ -85,4 +85,4 @@ class $modify(MFIPauseLayer, PauseLayer) {
     }
 };
 
-#endif // GEODE_IS_IOS
+#endif // GEODE_IS_IOS or TARGET_OS_IPHONE

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef GEODE_IS_IOS
+#if defined(GEODE_IS_IOS) || (defined(__APPLE__) && defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
 
 // Pure C++ interface - no Objective-C types
 struct ControllerState {
@@ -31,4 +31,4 @@ public:
     static bool isControllerConnected();
 };
 
-#endif // GEODE_IS_IOS
+#endif // GEODE_IS_IOS or TARGET_OS_IPHONE
