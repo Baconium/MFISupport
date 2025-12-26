@@ -38,61 +38,37 @@ class $modify(MFIPlayLayer, PlayLayer) {
         
         const auto& state = MFIControllerManager::getState();
         
-        // Log when specific buttons are detected
-        if (state.buttonA) {
-            log::debug("MFI PlayLayer: Button A detected");
+        // Log when specific buttons are detected (INFO for visibility)
+        if (state.buttonA) log::info("MFI PlayLayer: Button A detected");
+        if (state.buttonB) log::info("MFI PlayLayer: Button B detected");
+        if (state.buttonX) log::info("MFI PlayLayer: Button X detected");
+        if (state.buttonY) log::info("MFI PlayLayer: Button Y detected");
+        if (state.dpadUp) log::info("MFI PlayLayer: D-pad Up detected");
+        if (state.dpadDown) log::info("MFI PlayLayer: D-pad Down detected");
+        if (state.dpadLeft) log::info("MFI PlayLayer: D-pad Left detected");
+        if (state.dpadRight) log::info("MFI PlayLayer: D-pad Right detected");
+        if (state.leftTrigger) log::info("MFI PlayLayer: Left Trigger detected");
+        if (state.rightTrigger) log::info("MFI PlayLayer: Right Trigger detected");
+    }
+};
+
+// Hook into MenuLayer to show controller connection status and periodic state
+#include <Geode/modify/MenuLayer.hpp>
+
+class $modify(MFIMenuLayer, MenuLayer) {
+    bool init() {
+        log::info("=== MFI: MenuLayer::init() called ===");
+        
+        if (!MenuLayer::init()) {
+            log::error("MFI: MenuLayer::init() failed");
+            return false;
         }
-        if (state.buttonB) {
-            log::debug("MFI PlayLayer: Button B detected");
-        }
-        if (state.buttonX) {
-            log::debug("MFI PlayLayer: Button X detected");
-        }
-        if (state.buttonY) {
-            log::debug("MFI PlayLayer: Button Y detected");
-        }
-        if (state.dpadUp) {
-            log::debug("MFI PlayLayer: D-pad Up detected");
-        }
-        if (state.dpadDown) {
-            log::debug("MFI PlayLayer: D-pad Down detected");
-        }
-        if (state.dpadLeft) {
-            log::debug("MFI PlayLayer: D-pad Left detected");
-        }
-        if (state.dpadRight) {
-            log::debug("MFI PlayLayer: D-pad Right detected");
-        }
-        if (state.buttonA) {
-            log::info("MFI PlayLayer: Button A detected");
-        }
-        if (state.buttonB) {
-            log::info("MFI PlayLayer: Button B detected");
-        }
-        if (state.buttonX) {
-            log::info("MFI PlayLayer: Button X detected");
-        }
-        if (state.buttonY) {
-            log::info("MFI PlayLayer: Button Y detected");
-        }
-        if (state.dpadUp) {
-            log::info("MFI PlayLayer: D-pad Up detected");
-        }
-        if (state.dpadDown) {
-            log::info("MFI PlayLayer: D-pad Down detected");
-        }
-        if (state.dpadLeft) {
-            log::info("MFI PlayLayer: D-pad Left detected");
-        }
-        if (state.dpadRight) {
-            log::info("MFI PlayLayer: D-pad Right detected");
-        }
-        if (state.leftTrigger) {
-            log::info("MFI PlayLayer: Left Trigger detected");
-        }
-        if (state.rightTrigger) {
-            log::info("MFI PlayLayer: Right Trigger detected");
-        }
+        
+        log::info("=== MFI: MenuLayer::init() - calling MFIControllerManager::initialize() ===");
+        
+        // Initialize MFI controller support
+        MFIControllerManager::initialize();
+        
         log::info("=== MFI: MenuLayer::init() complete ===");
         
         return true;
@@ -116,32 +92,10 @@ class $modify(MFIPlayLayer, PlayLayer) {
 #include <Geode/modify/PauseLayer.hpp>
 
 class $modify(MFIPauseLayer, PauseLayer) {
-    static void onModify(auto& self) {
-        (void) self.setHookPriority("PauseLayer::init", -1);
-    }
-    
     void onEnter() {
         PauseLayer::onEnter();
         log::info("=== MFI: PauseLayer::onEnter() ===");
     }
-
-    bool init(bool p0) {
-        log::info("=== MFI: PauseLayer::init() called ===");
-        
-        if (!PauseLayer::init(p0)) {
-            log::error("MFI: PauseLayer::init() failed");
-            return false;
-        }
-        
-        if (MFIControllerManager::isControllerConnected()) {
-            log::info("=== MFI: PauseLayer::init() - Controller is active ===");
-        } else {
-            log::info("=== MFI: PauseLayer::init() - No controller connected ===");
-        }
-        
-        return true;
-    }
-    
     void keyDown(cocos2d::enumKeyCodes key) {
         log::debug("=== MFI: PauseLayer::keyDown() called with key={} ===", (int)key);
         
