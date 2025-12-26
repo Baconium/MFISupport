@@ -19,20 +19,11 @@ class $modify(MFIPlayLayer, PlayLayer) {
         }
         
         const auto& state = MFIControllerManager::getState();
-        
-        // Handle jump input (Button A, Right Trigger, or D-pad Up)
-        if (state.buttonA || state.rightTrigger || state.dpadUp) {
-            this->pushButton(1, true);
-        } else {
-            this->releaseButton(1, true);
-        }
-        
-        // Handle secondary actions (Button B or Left Trigger)
-        if (state.buttonB || state.leftTrigger) {
-            this->pushButton(1, false);
-        } else {
-            this->releaseButton(1, false);
-        }
+        // TODO: Map controller input to GD actions once button APIs are confirmed.
+        // Currently we only log states to avoid compile issues on platforms where
+        // button helpers are unavailable in bindings.
+        log::debug("MFI state: A={} B={} RT={} LT={} DpadU={}",
+            state.buttonA, state.buttonB, state.rightTrigger, state.leftTrigger, state.dpadUp);
     }
 };
 
@@ -61,7 +52,7 @@ class $modify(MFIPauseLayer, PauseLayer) {
     }
     
     bool init() {
-        if (!PauseLayer::init()) {
+        if (!PauseLayer::init(false)) {
             return false;
         }
         

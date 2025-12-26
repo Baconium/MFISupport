@@ -15,6 +15,9 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 # Add src directory to include path for header files
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Objective-C++ files must not reuse the C++ precompiled header
+set_source_files_properties(src/MFIController.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
