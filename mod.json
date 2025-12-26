@@ -1,0 +1,16 @@
+{
+	"geode": "4.10.0",
+	"gd": {
+		"ios": "2.2074"
+	},
+	"id": "baconmania.mfisupport",
+	"name": "MFI Controller Support",
+	"version": "v1.0.0",
+	"developer": "BaconMania",
+	"description": "Adds support for MFi (Made for iPhone/iPad/iPod) game controllers on iOS. Connect your compatible controller and start playing Geometry Dash with physical controls!",
+	"links": {
+		"community": "https://discord.gg/9e43WMKzhp"
+	},
+	"tags": ["gameplay", "enhancement", "utility", "interface"],
+	"platforms": ["ios"]
+}
