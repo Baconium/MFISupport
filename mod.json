@@ -11,8 +11,5 @@
 	"links": {
 		"community": "https://discord.gg/9e43WMKzhp"
 	},
-	"tags": ["gameplay", "enhancement", "utility", "interface"],
-	"support": {
-		"ios": true
-	}
+	"tags": ["gameplay", "enhancement", "utility", "interface"]
 }

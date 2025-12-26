@@ -11,10 +11,26 @@ using namespace geode::prelude;
 #include <Geode/modify/PlayLayer.hpp>
 
 class $modify(MFIPlayLayer, PlayLayer) {
+    struct Fields {
+        bool m_wasButtonAPressed = false;
+        bool m_wasButtonBPressed = false;
+    };
+
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        log::info("=== MFI: PlayLayer::init() called ===");
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
+            log::error("MFI: PlayLayer::init() failed");
+            return false;
+        }
+        log::info("=== MFI: PlayLayer::init() complete ===");
+        return true;
+    }
+
     void onEnter() {
         PlayLayer::onEnter();
-        log::info("=== MFI: PlayLayer::onEnter() ===");
+        log::info("=== MFI: PlayLayer::onEnter() called ===");
     }
+
     void update(float dt) {
         PlayLayer::update(dt);
         
@@ -22,33 +38,36 @@ class $modify(MFIPlayLayer, PlayLayer) {
             return;
         }
         
-        // Log controller state periodically (every 30 frames)
-        static int frameCounter = 0;
-        frameCounter++;
-        if (frameCounter >= 30) {
-            frameCounter = 0;
-            const auto& state = MFIControllerManager::getState();
-            log::info("MFI PlayLayer state (periodic): A={} B={} X={} Y={} RT={} LT={} DpadU={} DpadD={} DpadL={} DpadR={} LSX={:.2f} LSY={:.2f} RSX={:.2f} RSY={:.2f}",
-                state.buttonA, state.buttonB, state.buttonX, state.buttonY, 
-                state.rightTrigger, state.leftTrigger, 
-                state.dpadUp, state.dpadDown, state.dpadLeft, state.dpadRight,
-                state.leftThumbstickX, state.leftThumbstickY,
-                state.rightThumbstickX, state.rightThumbstickY);
-        }
-        
         const auto& state = MFIControllerManager::getState();
         
-        // Log when specific buttons are detected (INFO for visibility)
-        if (state.buttonA) log::info("MFI PlayLayer: Button A detected");
-        if (state.buttonB) log::info("MFI PlayLayer: Button B detected");
-        if (state.buttonX) log::info("MFI PlayLayer: Button X detected");
-        if (state.buttonY) log::info("MFI PlayLayer: Button Y detected");
-        if (state.dpadUp) log::info("MFI PlayLayer: D-pad Up detected");
-        if (state.dpadDown) log::info("MFI PlayLayer: D-pad Down detected");
-        if (state.dpadLeft) log::info("MFI PlayLayer: D-pad Left detected");
-        if (state.dpadRight) log::info("MFI PlayLayer: D-pad Right detected");
-        if (state.leftTrigger) log::info("MFI PlayLayer: Left Trigger detected");
-        if (state.rightTrigger) log::info("MFI PlayLayer: Right Trigger detected");
+        // Button A -> Jump (simulate holding)
+        if (state.buttonA && !m_fields->m_wasButtonAPressed) {
+            log::info("=== MFI: Button A PRESSED - Triggering jump ===");
+            // Simulate pressing space bar
+            this->handleButton(true, 1, true);
+            m_fields->m_wasButtonAPressed = true;
+        } else if (!state.buttonA && m_fields->m_wasButtonAPressed) {
+            log::info("=== MFI: Button A RELEASED ===");
+            this->handleButton(false, 1, true);
+            m_fields->m_wasButtonAPressed = false;
+        }
+        
+        // Button B -> Pause
+        if (state.buttonB && !m_fields->m_wasButtonBPressed) {
+            log::info("=== MFI: Button B PRESSED - Pausing game ===");
+            this->pauseGame(false);
+            m_fields->m_wasButtonBPressed = true;
+        } else if (!state.buttonB) {
+            m_fields->m_wasButtonBPressed = false;
+        }
+        
+        // Log state periodically
+        static int frameCounter = 0;
+        frameCounter++;
+        if (frameCounter >= 60) {
+            frameCounter = 0;
+            log::info("MFI PlayLayer update: Controller active, A={} B={}", state.buttonA, state.buttonB);
+        }
     }
 };
 
