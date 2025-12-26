@@ -44,7 +44,7 @@ class $modify(MFIPlayLayer, PlayLayer) {
         bool controllerConnected = MFIControllerManager::isControllerConnected();
         if (!controllerConnected) {
             if (totalFrames % 120 == 0) {
-                log::warning("MFI: No controller connected in update()");
+                log::warn("MFI: No controller connected in update()");
             }
             return;
         }
