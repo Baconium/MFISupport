@@ -11,6 +11,10 @@ using namespace geode::prelude;
 #include <Geode/modify/PlayLayer.hpp>
 
 class $modify(MFIPlayLayer, PlayLayer) {
+    void onEnter() {
+        PlayLayer::onEnter();
+        log::info("=== MFI: PlayLayer::onEnter() ===");
+    }
     void update(float dt) {
         PlayLayer::update(dt);
         
@@ -59,39 +63,52 @@ class $modify(MFIPlayLayer, PlayLayer) {
         if (state.dpadRight) {
             log::debug("MFI PlayLayer: D-pad Right detected");
         }
+        if (state.buttonA) {
+            log::info("MFI PlayLayer: Button A detected");
+        }
+        if (state.buttonB) {
+            log::info("MFI PlayLayer: Button B detected");
+        }
+        if (state.buttonX) {
+            log::info("MFI PlayLayer: Button X detected");
+        }
+        if (state.buttonY) {
+            log::info("MFI PlayLayer: Button Y detected");
+        }
+        if (state.dpadUp) {
+            log::info("MFI PlayLayer: D-pad Up detected");
+        }
+        if (state.dpadDown) {
+            log::info("MFI PlayLayer: D-pad Down detected");
+        }
+        if (state.dpadLeft) {
+            log::info("MFI PlayLayer: D-pad Left detected");
+        }
+        if (state.dpadRight) {
+            log::info("MFI PlayLayer: D-pad Right detected");
+        }
         if (state.leftTrigger) {
-            log::debug("MFI PlayLayer: Left Trigger detected");
+            log::info("MFI PlayLayer: Left Trigger detected");
         }
         if (state.rightTrigger) {
-            log::debug("MFI PlayLayer: Right Trigger detected");
+            log::info("MFI PlayLayer: Right Trigger detected");
         }
-        
-        // TODO: Map controller input to GD actions once button APIs are confirmed.
-        // Currently we only log states to avoid compile issues on platforms where
-        // button helpers are unavailable in bindings.
-    }
-};
-
-// Hook into MenuLayer to show controller connection status
-#include <Geode/modify/MenuLayer.hpp>
-
-class $modify(MFIMenuLayer, MenuLayer) {
-    bool init() {
-        log::info("=== MFI: MenuLayer::init() called ===");
-        
-        if (!MenuLayer::init()) {
-            log::error("MFI: MenuLayer::init() failed");
-            return false;
-        }
-        
-        log::info("=== MFI: MenuLayer::init() - calling MFIControllerManager::initialize() ===");
-        
-        // Initialize MFI controller support
-        MFIControllerManager::initialize();
-        
         log::info("=== MFI: MenuLayer::init() complete ===");
         
         return true;
+    }
+    void update(float dt) {
+        MenuLayer::update(dt);
+        static int menuFrameCounter = 0;
+        if (MFIControllerManager::isControllerConnected()) {
+            menuFrameCounter++;
+            if (menuFrameCounter >= 60) {
+                menuFrameCounter = 0;
+                const auto& s = MFIControllerManager::getState();
+                log::info("MFI MenuLayer state (periodic): A={} B={} DpadU={} DpadD={} DpadL={} DpadR={}",
+                    s.buttonA, s.buttonB, s.dpadUp, s.dpadDown, s.dpadLeft, s.dpadRight);
+            }
+        }
     }
 };
 
@@ -103,10 +120,15 @@ class $modify(MFIPauseLayer, PauseLayer) {
         (void) self.setHookPriority("PauseLayer::init", -1);
     }
     
-    bool init() {
+    void onEnter() {
+        PauseLayer::onEnter();
+        log::info("=== MFI: PauseLayer::onEnter() ===");
+    }
+
+    bool init(bool p0) {
         log::info("=== MFI: PauseLayer::init() called ===");
         
-        if (!PauseLayer::init(false)) {
+        if (!PauseLayer::init(p0)) {
             log::error("MFI: PauseLayer::init() failed");
             return false;
         }

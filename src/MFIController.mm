@@ -20,11 +20,11 @@ static void connectController(GCController* controller) {
     log::info("MFI Controller product category: {}", [controller.productCategory UTF8String]);
     
     if (controller.extendedGamepad) {
-        log::debug("MFI Controller supports extended gamepad profile");
+        log::info("MFI Controller supports extended gamepad profile");
     } else if (controller.gamepad) {
-        log::debug("MFI Controller supports standard gamepad profile");
+        log::info("MFI Controller supports standard gamepad profile");
     } else if (controller.microGamepad) {
-        log::debug("MFI Controller supports micro gamepad profile");
+        log::info("MFI Controller supports micro gamepad profile");
     }
     
     s_currentController = controller;
@@ -34,124 +34,124 @@ static void connectController(GCController* controller) {
     // Set up input handlers for extended gamepad profile
     if (controller.extendedGamepad) {
         GCExtendedGamepad* gamepad = controller.extendedGamepad;
-        log::debug("MFI: Setting up extended gamepad handlers...");
+        log::info("MFI: Setting up extended gamepad handlers...");
         
         // Button A (Jump/Select)
-        log::debug("MFI: Setting up Button A handler");
+        log::info("MFI: Setting up Button A handler");
         gamepad.buttonA.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonA = pressed;
             if (pressed) {
-                log::debug("MFI Controller Button A triggered");
+                log::info("MFI Controller Button A triggered");
             }
         };
         
         // Button B (Back/Cancel)
-        log::debug("MFI: Setting up Button B handler");
+        log::info("MFI: Setting up Button B handler");
         gamepad.buttonB.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonB = pressed;
             if (pressed) {
-                log::debug("MFI Controller Button B triggered");
+                log::info("MFI Controller Button B triggered");
             }
         };
         
         // Button X
-        log::debug("MFI: Setting up Button X handler");
+        log::info("MFI: Setting up Button X handler");
         gamepad.buttonX.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonX = pressed;
             if (pressed) {
-                log::debug("MFI Controller Button X triggered");
+                log::info("MFI Controller Button X triggered");
             }
         };
         
         // Button Y
-        log::debug("MFI: Setting up Button Y handler");
+        log::info("MFI: Setting up Button Y handler");
         gamepad.buttonY.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonY = pressed;
             if (pressed) {
-                log::debug("MFI Controller Button Y triggered");
+                log::info("MFI Controller Button Y triggered");
             }
         };
         
         // Shoulder buttons
-        log::debug("MFI: Setting up Left Shoulder handler");
+        log::info("MFI: Setting up Left Shoulder handler");
         gamepad.leftShoulder.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.leftShoulder = pressed;
             if (pressed) {
-                log::debug("MFI Controller Left Shoulder triggered");
+                log::info("MFI Controller Left Shoulder triggered");
             }
         };
         
-        log::debug("MFI: Setting up Right Shoulder handler");
+        log::info("MFI: Setting up Right Shoulder handler");
         gamepad.rightShoulder.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.rightShoulder = pressed;
             if (pressed) {
-                log::debug("MFI Controller Right Shoulder triggered");
+                log::info("MFI Controller Right Shoulder triggered");
             }
         };
         
         // Triggers
-        log::debug("MFI: Setting up Left Trigger handler");
+        log::info("MFI: Setting up Left Trigger handler");
         gamepad.leftTrigger.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.leftTrigger = value > 0.5f;
             if (value > 0.5f) {
-                log::debug("MFI Controller Left Trigger triggered (value={})", value);
+                log::info("MFI Controller Left Trigger triggered (value={})", value);
             }
         };
         
-        log::debug("MFI: Setting up Right Trigger handler");
+        log::info("MFI: Setting up Right Trigger handler");
         gamepad.rightTrigger.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.rightTrigger = value > 0.5f;
             if (value > 0.5f) {
-                log::debug("MFI Controller Right Trigger triggered (value={})", value);
+                log::info("MFI Controller Right Trigger triggered (value={})", value);
             }
         };
         
         // D-pad
-        log::debug("MFI: Setting up D-pad handlers");
+        log::info("MFI: Setting up D-pad handlers");
         gamepad.dpad.up.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadUp = pressed;
             if (pressed) {
-                log::debug("MFI Controller D-pad Up triggered");
+                log::info("MFI Controller D-pad Up triggered");
             }
         };
         
         gamepad.dpad.down.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadDown = pressed;
             if (pressed) {
-                log::debug("MFI Controller D-pad Down triggered");
+                log::info("MFI Controller D-pad Down triggered");
             }
         };
         
         gamepad.dpad.left.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadLeft = pressed;
             if (pressed) {
-                log::debug("MFI Controller D-pad Left triggered");
+                log::info("MFI Controller D-pad Left triggered");
             }
         };
         
         gamepad.dpad.right.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadRight = pressed;
             if (pressed) {
-                log::debug("MFI Controller D-pad Right triggered");
+                log::info("MFI Controller D-pad Right triggered");
             }
         };
         
         // Thumbsticks
-        log::debug("MFI: Setting up Left Thumbstick handler");
+        log::info("MFI: Setting up Left Thumbstick handler");
         gamepad.leftThumbstick.valueChangedHandler = ^(GCControllerDirectionPad* dpad, float xValue, float yValue) {
             s_controllerState.leftThumbstickX = xValue;
             s_controllerState.leftThumbstickY = yValue;
             if (xValue != 0.0f || yValue != 0.0f) {
-                log::debug("MFI Controller Left Thumbstick moved (x={}, y={})", xValue, yValue);
+                log::info("MFI Controller Left Thumbstick moved (x={}, y={})", xValue, yValue);
             }
         };
         
-        log::debug("MFI: Setting up Right Thumbstick handler");
+        log::info("MFI: Setting up Right Thumbstick handler");
         gamepad.rightThumbstick.valueChangedHandler = ^(GCControllerDirectionPad* dpad, float xValue, float yValue) {
             s_controllerState.rightThumbstickX = xValue;
             s_controllerState.rightThumbstickY = yValue;
             if (xValue != 0.0f || yValue != 0.0f) {
-                log::debug("MFI Controller Right Thumbstick moved (x={}, y={})", xValue, yValue);
+                log::info("MFI Controller Right Thumbstick moved (x={}, y={})", xValue, yValue);
             }
         };
         
