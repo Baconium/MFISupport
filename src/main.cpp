@@ -34,8 +34,24 @@ class $modify(MFIPlayLayer, PlayLayer) {
     void update(float dt) {
         PlayLayer::update(dt);
         
-        if (!MFIControllerManager::isControllerConnected()) {
+        // Log every update call periodically to verify hook is running
+        static int totalFrames = 0;
+        totalFrames++;
+        if (totalFrames % 120 == 0) {
+            log::info("=== MFI: PlayLayer::update() running (frame {}) ===", totalFrames);
+        }
+        
+        bool controllerConnected = MFIControllerManager::isControllerConnected();
+        if (!controllerConnected) {
+            if (totalFrames % 120 == 0) {
+                log::warning("MFI: No controller connected in update()");
+            }
             return;
+        }
+        
+        // Log that we have a controller
+        if (totalFrames % 120 == 0) {
+            log::info("MFI: Controller IS connected in update()");
         }
         
         const auto& state = MFIControllerManager::getState();
@@ -43,7 +59,6 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // Button A -> Jump (simulate holding)
         if (state.buttonA && !m_fields->m_wasButtonAPressed) {
             log::info("=== MFI: Button A PRESSED - Triggering jump ===");
-            // Simulate pressing space bar
             this->handleButton(true, 1, true);
             m_fields->m_wasButtonAPressed = true;
         } else if (!state.buttonA && m_fields->m_wasButtonAPressed) {
@@ -62,11 +77,9 @@ class $modify(MFIPlayLayer, PlayLayer) {
         }
         
         // Log state periodically
-        static int frameCounter = 0;
-        frameCounter++;
-        if (frameCounter >= 60) {
-            frameCounter = 0;
-            log::info("MFI PlayLayer update: Controller active, A={} B={}", state.buttonA, state.buttonB);
+        if (totalFrames % 60 == 0) {
+            log::info("MFI PlayLayer state: A={} B={} X={} Y={}", 
+                state.buttonA, state.buttonB, state.buttonX, state.buttonY);
         }
     }
 };
