@@ -11,11 +11,6 @@ using namespace geode::prelude;
 #include <Geode/modify/PlayLayer.hpp>
 
 class $modify(MFIPlayLayer, PlayLayer) {
-    struct Fields {
-        bool m_wasButtonAPressed = false;
-        bool m_wasButtonBPressed = false;
-    };
-
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         log::info("=== MFI: PlayLayer::init() called ===");
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
@@ -34,52 +29,21 @@ class $modify(MFIPlayLayer, PlayLayer) {
     void update(float dt) {
         PlayLayer::update(dt);
         
-        // Log every update call periodically to verify hook is running
-        static int totalFrames = 0;
-        totalFrames++;
-        if (totalFrames % 120 == 0) {
-            log::info("=== MFI: PlayLayer::update() running (frame {}) ===", totalFrames);
-        }
+        // Just log to verify hook is running at all
+        static int frameCount = 0;
+        frameCount++;
         
-        bool controllerConnected = MFIControllerManager::isControllerConnected();
-        if (!controllerConnected) {
-            if (totalFrames % 120 == 0) {
-                log::warn("MFI: No controller connected in update()");
+        if (frameCount % 120 == 0) {
+            log::info("=== MFI: PlayLayer::update() RUNNING (frame {}) ===", frameCount);
+            
+            bool connected = MFIControllerManager::isControllerConnected();
+            log::info("MFI: Controller connected = {}", connected);
+            
+            if (connected) {
+                const auto& state = MFIControllerManager::getState();
+                log::info("MFI: State A={} B={} X={} Y={}", 
+                    state.buttonA, state.buttonB, state.buttonX, state.buttonY);
             }
-            return;
-        }
-        
-        // Log that we have a controller
-        if (totalFrames % 120 == 0) {
-            log::info("MFI: Controller IS connected in update()");
-        }
-        
-        const auto& state = MFIControllerManager::getState();
-        
-        // Button A -> Jump (simulate holding)
-        if (state.buttonA && !m_fields->m_wasButtonAPressed) {
-            log::info("=== MFI: Button A PRESSED - Triggering jump ===");
-            this->handleButton(true, 1, true);
-            m_fields->m_wasButtonAPressed = true;
-        } else if (!state.buttonA && m_fields->m_wasButtonAPressed) {
-            log::info("=== MFI: Button A RELEASED ===");
-            this->handleButton(false, 1, true);
-            m_fields->m_wasButtonAPressed = false;
-        }
-        
-        // Button B -> Pause
-        if (state.buttonB && !m_fields->m_wasButtonBPressed) {
-            log::info("=== MFI: Button B PRESSED - Pausing game ===");
-            this->pauseGame(false);
-            m_fields->m_wasButtonBPressed = true;
-        } else if (!state.buttonB) {
-            m_fields->m_wasButtonBPressed = false;
-        }
-        
-        // Log state periodically
-        if (totalFrames % 60 == 0) {
-            log::info("MFI PlayLayer state: A={} B={} X={} Y={}", 
-                state.buttonA, state.buttonB, state.buttonX, state.buttonY);
         }
     }
 };
