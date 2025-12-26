@@ -46,6 +46,17 @@ class $modify(MFIPlayLayer, PlayLayer) {
             }
         }
     }
+
+    void step(float dt) {
+        PlayLayer::step(dt);
+        
+        static int stepCount = 0;
+        stepCount++;
+        
+        if (stepCount % 120 == 0) {
+            log::info("=== MFI: PlayLayer::step() RUNNING (frame {}) ===", stepCount);
+        }
+    }
 };
 
 // Hook into MenuLayer to show controller connection status and periodic state
