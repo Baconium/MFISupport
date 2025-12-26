@@ -100,15 +100,15 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // - B: pause (press)
         if (aPressed) {
             log::debug("MFI: A pressed -> jump down");
-            this->handleButton(true, 1);
+            this->handleButton(true, 1, true);
         }
         if (aReleased) {
             log::debug("MFI: A released -> jump up");
-            this->handleButton(false, 1);
+            this->handleButton(false, 1, true);
         }
         if (bPressed) {
             log::debug("MFI: B pressed -> pauseGame");
-            this->pauseGame();
+            this->pauseGame(false);
         }
     }
 
