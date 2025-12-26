@@ -11,12 +11,26 @@ using namespace geode::prelude;
 #include <Geode/modify/PlayLayer.hpp>
 
 class $modify(MFIPlayLayer, PlayLayer) {
+    struct Fields {
+        bool m_tickScheduled = false;
+        bool m_prevA = false;
+        bool m_prevB = false;
+    };
+
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
         log::info("=== MFI: PlayLayer::init() called ===");
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
             log::error("MFI: PlayLayer::init() failed");
             return false;
         }
+
+        // Schedule from init() since PlayLayer::onEnter() may be unhookable on this version
+        if (!m_fields->m_tickScheduled) {
+            this->schedule(schedule_selector(MFIPlayLayer::mfiTick));
+            m_fields->m_tickScheduled = true;
+            log::info("=== MFI: PlayLayer::mfiTick scheduled (from init) ===");
+        }
+
         log::info("=== MFI: PlayLayer::init() complete ===");
         return true;
     }
@@ -24,9 +38,12 @@ class $modify(MFIPlayLayer, PlayLayer) {
     void onEnter() {
         PlayLayer::onEnter();
         log::info("=== MFI: PlayLayer::onEnter() called ===");
-        // Schedule our own per-frame tick since PlayLayer::update() can't be hooked reliably
-        this->schedule(schedule_selector(MFIPlayLayer::mfiTick));
-        log::info("=== MFI: PlayLayer::mfiTick scheduled ===");
+        // Best-effort fallback in case init() scheduling didn't happen
+        if (!m_fields->m_tickScheduled) {
+            this->schedule(schedule_selector(MFIPlayLayer::mfiTick));
+            m_fields->m_tickScheduled = true;
+            log::info("=== MFI: PlayLayer::mfiTick scheduled (from onEnter) ===");
+        }
     }
 
     void update(float dt) {
@@ -54,6 +71,9 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // Our own scheduled per-frame callback; safe alternative to hooking update()
         static int tickCount = 0;
         tickCount++;
+        if (tickCount == 1) {
+            log::info("=== MFI: PlayLayer::mfiTick() FIRST CALL ===");
+        }
         if (tickCount % 120 == 0) {
             log::info("=== MFI: PlayLayer::mfiTick() RUNNING (frame {}) ===", tickCount);
             bool connected = MFIControllerManager::isControllerConnected();
@@ -62,19 +82,42 @@ class $modify(MFIPlayLayer, PlayLayer) {
         if (!MFIControllerManager::isControllerConnected()) {
             return;
         }
-        // Minimal diagnostics for now; action mapping can be added once verified
+
         const auto& s = MFIControllerManager::getState();
-        if (s.buttonA) {
-            // Will map to jump once tick confirmed
+        const bool aNow = s.buttonA;
+        const bool bNow = s.buttonB;
+
+        // Edge-detect so we can press/release once per transition
+        const bool aPressed = aNow && !m_fields->m_prevA;
+        const bool aReleased = !aNow && m_fields->m_prevA;
+        const bool bPressed = bNow && !m_fields->m_prevB;
+
+        m_fields->m_prevA = aNow;
+        m_fields->m_prevB = bNow;
+
+        // Gameplay mappings (only if tick is running):
+        // - A: jump (press/release)
+        // - B: pause (press)
+        if (aPressed) {
+            log::debug("MFI: A pressed -> jump down");
+            this->handleButton(true, 1);
         }
-        if (s.buttonB) {
-            // Will map to pause once tick confirmed
+        if (aReleased) {
+            log::debug("MFI: A released -> jump up");
+            this->handleButton(false, 1);
+        }
+        if (bPressed) {
+            log::debug("MFI: B pressed -> pauseGame");
+            this->pauseGame();
         }
     }
 
     void onExit() {
         // Cleanup: unschedule our tick when leaving the layer
-        this->unschedule(schedule_selector(MFIPlayLayer::mfiTick));
+        if (m_fields->m_tickScheduled) {
+            this->unschedule(schedule_selector(MFIPlayLayer::mfiTick));
+            m_fields->m_tickScheduled = false;
+        }
         PlayLayer::onExit();
         log::info("=== MFI: PlayLayer::onExit() - mfiTick unscheduled ===");
     }
