@@ -24,6 +24,9 @@ class $modify(MFIPlayLayer, PlayLayer) {
     void onEnter() {
         PlayLayer::onEnter();
         log::info("=== MFI: PlayLayer::onEnter() called ===");
+        // Schedule our own per-frame tick since PlayLayer::update() can't be hooked reliably
+        this->schedule(schedule_selector(MFIPlayLayer::mfiTick));
+        log::info("=== MFI: PlayLayer::mfiTick scheduled ===");
     }
 
     void update(float dt) {
@@ -46,16 +49,34 @@ class $modify(MFIPlayLayer, PlayLayer) {
             }
         }
     }
-
-    void step(float dt) {
-        PlayLayer::step(dt);
-        
-        static int stepCount = 0;
-        stepCount++;
-        
-        if (stepCount % 120 == 0) {
-            log::info("=== MFI: PlayLayer::step() RUNNING (frame {}) ===", stepCount);
+    
+    void mfiTick(float dt) {
+        // Our own scheduled per-frame callback; safe alternative to hooking update()
+        static int tickCount = 0;
+        tickCount++;
+        if (tickCount % 120 == 0) {
+            log::info("=== MFI: PlayLayer::mfiTick() RUNNING (frame {}) ===", tickCount);
+            bool connected = MFIControllerManager::isControllerConnected();
+            log::info("MFI: Controller connected = {}", connected);
         }
+        if (!MFIControllerManager::isControllerConnected()) {
+            return;
+        }
+        // Minimal diagnostics for now; action mapping can be added once verified
+        const auto& s = MFIControllerManager::getState();
+        if (s.buttonA) {
+            // Will map to jump once tick confirmed
+        }
+        if (s.buttonB) {
+            // Will map to pause once tick confirmed
+        }
+    }
+
+    void onExit() {
+        // Cleanup: unschedule our tick when leaving the layer
+        this->unschedule(schedule_selector(MFIPlayLayer::mfiTick));
+        PlayLayer::onExit();
+        log::info("=== MFI: PlayLayer::onExit() - mfiTick unscheduled ===");
     }
 };
 
