@@ -15,115 +15,199 @@ static ControllerState s_controllerState;
 static GCController* s_currentController = nil;
 
 static void connectController(GCController* controller) {
-    log::info("MFI Controller connected: {}", [controller.vendorName UTF8String]);
+    log::info("=== MFI Controller: connectController() called ===");
+    log::info("MFI Controller name: {}", [controller.vendorName UTF8String]);
+    log::info("MFI Controller product category: {}", [controller.productCategory UTF8String]);
+    
+    if (controller.extendedGamepad) {
+        log::debug("MFI Controller supports extended gamepad profile");
+    } else if (controller.gamepad) {
+        log::debug("MFI Controller supports standard gamepad profile");
+    } else if (controller.microGamepad) {
+        log::debug("MFI Controller supports micro gamepad profile");
+    }
+    
     s_currentController = controller;
     s_controllerState.isConnected = true;
+    log::info("MFI Controller connection status: isConnected = true");
     
     // Set up input handlers for extended gamepad profile
     if (controller.extendedGamepad) {
         GCExtendedGamepad* gamepad = controller.extendedGamepad;
+        log::debug("MFI: Setting up extended gamepad handlers...");
         
         // Button A (Jump/Select)
+        log::debug("MFI: Setting up Button A handler");
         gamepad.buttonA.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonA = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Button A triggered");
+            }
         };
         
         // Button B (Back/Cancel)
+        log::debug("MFI: Setting up Button B handler");
         gamepad.buttonB.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonB = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Button B triggered");
+            }
         };
         
         // Button X
+        log::debug("MFI: Setting up Button X handler");
         gamepad.buttonX.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonX = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Button X triggered");
+            }
         };
         
         // Button Y
+        log::debug("MFI: Setting up Button Y handler");
         gamepad.buttonY.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.buttonY = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Button Y triggered");
+            }
         };
         
         // Shoulder buttons
+        log::debug("MFI: Setting up Left Shoulder handler");
         gamepad.leftShoulder.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.leftShoulder = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Left Shoulder triggered");
+            }
         };
         
+        log::debug("MFI: Setting up Right Shoulder handler");
         gamepad.rightShoulder.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.rightShoulder = pressed;
+            if (pressed) {
+                log::debug("MFI Controller Right Shoulder triggered");
+            }
         };
         
         // Triggers
+        log::debug("MFI: Setting up Left Trigger handler");
         gamepad.leftTrigger.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.leftTrigger = value > 0.5f;
+            if (value > 0.5f) {
+                log::debug("MFI Controller Left Trigger triggered (value={})", value);
+            }
         };
         
+        log::debug("MFI: Setting up Right Trigger handler");
         gamepad.rightTrigger.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.rightTrigger = value > 0.5f;
+            if (value > 0.5f) {
+                log::debug("MFI Controller Right Trigger triggered (value={})", value);
+            }
         };
         
         // D-pad
+        log::debug("MFI: Setting up D-pad handlers");
         gamepad.dpad.up.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadUp = pressed;
+            if (pressed) {
+                log::debug("MFI Controller D-pad Up triggered");
+            }
         };
         
         gamepad.dpad.down.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadDown = pressed;
+            if (pressed) {
+                log::debug("MFI Controller D-pad Down triggered");
+            }
         };
         
         gamepad.dpad.left.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadLeft = pressed;
+            if (pressed) {
+                log::debug("MFI Controller D-pad Left triggered");
+            }
         };
         
         gamepad.dpad.right.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
             s_controllerState.dpadRight = pressed;
+            if (pressed) {
+                log::debug("MFI Controller D-pad Right triggered");
+            }
         };
         
         // Thumbsticks
+        log::debug("MFI: Setting up Left Thumbstick handler");
         gamepad.leftThumbstick.valueChangedHandler = ^(GCControllerDirectionPad* dpad, float xValue, float yValue) {
             s_controllerState.leftThumbstickX = xValue;
             s_controllerState.leftThumbstickY = yValue;
+            if (xValue != 0.0f || yValue != 0.0f) {
+                log::debug("MFI Controller Left Thumbstick moved (x={}, y={})", xValue, yValue);
+            }
         };
         
+        log::debug("MFI: Setting up Right Thumbstick handler");
         gamepad.rightThumbstick.valueChangedHandler = ^(GCControllerDirectionPad* dpad, float xValue, float yValue) {
             s_controllerState.rightThumbstickX = xValue;
             s_controllerState.rightThumbstickY = yValue;
+            if (xValue != 0.0f || yValue != 0.0f) {
+                log::debug("MFI Controller Right Thumbstick moved (x={}, y={})", xValue, yValue);
+            }
         };
+        
+        log::info("MFI: All extended gamepad handlers configured successfully");
     }
 }
 
 static void disconnectController() {
+    log::info("=== MFI Controller: disconnectController() called ===");
     log::info("MFI Controller disconnected");
+    if (s_currentController) {
+        log::info("MFI Controller was: {}", [s_currentController.vendorName UTF8String]);
+    }
     s_currentController = nil;
     s_controllerState = ControllerState();
+    log::info("MFI Controller connection status: isConnected = false");
 }
 
 void MFIControllerManager::initialize() {
-    log::info("Initializing MFI Controller Support");
+    log::info("=== MFI Controller Manager: Initialize Called ===");
     
     // Check for already connected controllers
     NSArray<GCController*>* controllers = [GCController controllers];
+    log::info("MFI: Checking for already-connected controllers (count={})", controllers.count);
+    
     if (controllers.count > 0) {
+        log::info("MFI: Found {} connected controller(s)", controllers.count);
         connectController(controllers[0]);
+    } else {
+        log::info("MFI: No controllers currently connected");
     }
     
     // Register for controller connect notifications
+    log::info("MFI: Registering for GCControllerDidConnectNotification");
     [[NSNotificationCenter defaultCenter] 
         addObserverForName:GCControllerDidConnectNotification
         object:nil
         queue:[NSOperationQueue mainQueue]
         usingBlock:^(NSNotification* notification) {
+            log::info("MFI: GCControllerDidConnectNotification received");
             GCController* controller = (GCController*)notification.object;
             connectController(controller);
         }];
     
     // Register for controller disconnect notifications
+    log::info("MFI: Registering for GCControllerDidDisconnectNotification");
     [[NSNotificationCenter defaultCenter]
         addObserverForName:GCControllerDidDisconnectNotification
         object:nil
         queue:[NSOperationQueue mainQueue]
         usingBlock:^(NSNotification* notification) {
+            log::info("MFI: GCControllerDidDisconnectNotification received");
             disconnectController();
         }];
+    
+    log::info("=== MFI Controller Manager: Initialize Complete ===");
 }
 
 const ControllerState& MFIControllerManager::getState() {
