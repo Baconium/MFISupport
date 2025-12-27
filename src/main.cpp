@@ -380,12 +380,12 @@ class $modify(MFIPauseLayer, PauseLayer) {
             bool upPressed = s.dpadUp && !m_fields->m_prevUp;
             bool downPressed = s.dpadDown && !m_fields->m_prevDown;
             if (upPressed) {
-                log::info("MFI: PauseLayer - Dpad Up -> KEY_UpArrow");
-                this->keyDown(cocos2d::KEY_UpArrow);
+                log::info("MFI: PauseLayer - Dpad Up -> KEY_ArrowUp");
+                this->keyDown(cocos2d::KEY_ArrowUp);
             }
             if (downPressed) {
-                log::info("MFI: PauseLayer - Dpad Down -> KEY_DownArrow");
-                this->keyDown(cocos2d::KEY_DownArrow);
+                log::info("MFI: PauseLayer - Dpad Down -> KEY_ArrowDown");
+                this->keyDown(cocos2d::KEY_ArrowDown);
             }
             m_fields->m_prevUp = s.dpadUp;
             m_fields->m_prevDown = s.dpadDown;
