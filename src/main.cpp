@@ -11,40 +11,15 @@ using namespace geode::prelude;
 #include <Geode/binding/GameManager.hpp>
 
 namespace {
-    template <class T>
-    concept HasSetGamepadConnected = requires(T* gm, bool b) {
-        gm->setGamepadConnected(b);
-    };
-
-    template <class T>
-    concept HasSetControllerConnected = requires(T* gm, bool b) {
-        gm->setControllerConnected(b);
-    };
-
-    template <class T>
-    concept HasMGamepadConnected = requires(T* gm, bool b) {
-        gm->m_gamepadConnected = b;
-    };
-
     static void setGDControllerMode(bool connected) {
         auto* gm = GameManager::sharedState();
         if (!gm) {
             log::warn("MFI: GameManager::sharedState() is null");
             return;
         }
-
-        if constexpr (HasSetGamepadConnected<GameManager>) {
-            gm->setGamepadConnected(connected);
-            log::info("MFI: Set GameManager gamepadConnected via setGamepadConnected({})", connected);
-        } else if constexpr (HasSetControllerConnected<GameManager>) {
-            gm->setControllerConnected(connected);
-            log::info("MFI: Set GameManager controllerConnected via setControllerConnected({})", connected);
-        } else if constexpr (HasMGamepadConnected<GameManager>) {
-            gm->m_gamepadConnected = connected;
-            log::info("MFI: Set GameManager m_gamepadConnected = {}", connected);
-        } else {
-            log::warn("MFI: No known GameManager controller flag in bindings; prompts may not swap");
-        }
+        // The 2.2074 bindings in this build don’t expose the usual controller flags.
+        // We log here for visibility; prompts may not swap unless a future binding adds a setter/field.
+        log::info("MFI: Requesting controller UI mode -> {} (no exposed GameManager flag in this binding)", connected);
     }
 }
 
