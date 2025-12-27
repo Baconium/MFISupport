@@ -30,6 +30,19 @@ static void connectController(GCController* controller) {
     s_currentController = controller;
     s_controllerState.isConnected = true;
     log::info("MFI Controller connection status: isConnected = true");
+
+    // Notify C++ side so the game can switch to controller UI mode (PC-like prompts)
+    mfisupport::onControllerConnectionChanged(true);
+
+    // iOS "pause/menu" button (matches Start on many controllers)
+    controller.controllerPausedHandler = ^(GCController* c) {
+        (void)c;
+        s_controllerState.buttonMenu = true;
+        log::info("MFI Controller Menu/Start triggered");
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            s_controllerState.buttonMenu = false;
+        });
+    };
     
     // Set up input handlers for extended gamepad profile
     if (controller.extendedGamepad) {
@@ -168,6 +181,9 @@ static void disconnectController() {
     s_currentController = nil;
     s_controllerState = ControllerState();
     log::info("MFI Controller connection status: isConnected = false");
+
+    // Notify C++ side so the game can switch back to touch UI mode
+    mfisupport::onControllerConnectionChanged(false);
 }
 
 void MFIControllerManager::initialize() {

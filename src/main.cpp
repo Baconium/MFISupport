@@ -7,6 +7,54 @@ using namespace geode::prelude;
 // Include our C++ interface (no Objective-C types)
 #include "MFIController.h"
 
+// Best-effort toggling of GD's internal controller mode (drives controller prompts / textures)
+#include <Geode/binding/GameManager.hpp>
+
+namespace {
+    template <class T>
+    concept HasSetGamepadConnected = requires(T* gm, bool b) {
+        gm->setGamepadConnected(b);
+    };
+
+    template <class T>
+    concept HasSetControllerConnected = requires(T* gm, bool b) {
+        gm->setControllerConnected(b);
+    };
+
+    template <class T>
+    concept HasMGamepadConnected = requires(T* gm, bool b) {
+        gm->m_gamepadConnected = b;
+    };
+
+    static void setGDControllerMode(bool connected) {
+        auto* gm = GameManager::sharedState();
+        if (!gm) {
+            log::warn("MFI: GameManager::sharedState() is null");
+            return;
+        }
+
+        if constexpr (HasSetGamepadConnected<GameManager>) {
+            gm->setGamepadConnected(connected);
+            log::info("MFI: Set GameManager gamepadConnected via setGamepadConnected({})", connected);
+        } else if constexpr (HasSetControllerConnected<GameManager>) {
+            gm->setControllerConnected(connected);
+            log::info("MFI: Set GameManager controllerConnected via setControllerConnected({})", connected);
+        } else if constexpr (HasMGamepadConnected<GameManager>) {
+            gm->m_gamepadConnected = connected;
+            log::info("MFI: Set GameManager m_gamepadConnected = {}", connected);
+        } else {
+            log::warn("MFI: No known GameManager controller flag in bindings; prompts may not swap");
+        }
+    }
+}
+
+namespace mfisupport {
+    void onControllerConnectionChanged(bool connected) {
+        log::info("MFI: Controller connection changed -> {}", connected);
+        setGDControllerMode(connected);
+    }
+}
+
 // Hook into PlayLayer for gameplay input
 #include <Geode/modify/PlayLayer.hpp>
 
@@ -15,6 +63,17 @@ class $modify(MFIPlayLayer, PlayLayer) {
         bool m_tickScheduled = false;
         bool m_prevA = false;
         bool m_prevB = false;
+        bool m_prevX = false;
+        bool m_prevY = false;
+        bool m_prevLB = false;
+        bool m_prevRB = false;
+        bool m_prevLT = false;
+        bool m_prevRT = false;
+        bool m_prevMenu = false;
+        bool m_prevUp = false;
+        bool m_prevDown = false;
+        bool m_prevLeft = false;
+        bool m_prevRight = false;
     };
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
@@ -84,32 +143,97 @@ class $modify(MFIPlayLayer, PlayLayer) {
         }
 
         const auto& s = MFIControllerManager::getState();
+
         const bool aNow = s.buttonA;
         const bool bNow = s.buttonB;
+        const bool xNow = s.buttonX;
+        const bool yNow = s.buttonY;
+        const bool lbNow = s.leftShoulder;
+        const bool rbNow = s.rightShoulder;
+        const bool ltNow = s.leftTrigger;
+        const bool rtNow = s.rightTrigger;
+        const bool menuNow = s.buttonMenu;
+        const bool upNow = s.dpadUp;
+        const bool downNow = s.dpadDown;
+        const bool leftNow = s.dpadLeft;
+        const bool rightNow = s.dpadRight;
 
-        // Edge-detect so we can press/release once per transition
-        const bool aPressed = aNow && !m_fields->m_prevA;
-        const bool aReleased = !aNow && m_fields->m_prevA;
-        const bool bPressed = bNow && !m_fields->m_prevB;
+        auto edge = [&](bool now, bool& prev) {
+            bool pressed = now && !prev;
+            prev = now;
+            return pressed;
+        };
+        auto edgeRelease = [&](bool now, bool& prev) {
+            bool released = !now && prev;
+            prev = now;
+            return released;
+        };
 
-        m_fields->m_prevA = aNow;
-        m_fields->m_prevB = bNow;
+        // Feed ALL buttons into GD's controller pipeline (PC-like).
+        // Button ids are based on common GD bindings conventions:
+        // 1=A, 2=B, 3=X, 4=Y, 5=LB, 6=RB, 7=LT, 8=RT, 9=Menu/Start, 10=Up, 11=Down, 12=Left, 13=Right
+        // If a specific id differs on your build, we can adjust after a quick test.
 
-        // Gameplay mappings (only if tick is running):
-        // - A: jump (press/release)
-        // - B: pause (press)
-        if (aPressed) {
-            log::debug("MFI: A pressed -> jump down");
+        // A (jump)
+        if (edge(aNow, m_fields->m_prevA)) {
             this->handleButton(true, 1, true);
         }
-        if (aReleased) {
-            log::debug("MFI: A released -> jump up");
+        if (edgeRelease(aNow, m_fields->m_prevA)) {
             this->handleButton(false, 1, true);
         }
-        if (bPressed) {
-            log::debug("MFI: B pressed -> pauseGame");
+
+        // B
+        if (edge(bNow, m_fields->m_prevB)) {
+            this->handleButton(true, 2, true);
+        }
+        if (edgeRelease(bNow, m_fields->m_prevB)) {
+            this->handleButton(false, 2, true);
+        }
+
+        // X
+        if (edge(xNow, m_fields->m_prevX)) {
+            this->handleButton(true, 3, true);
+        }
+        if (edgeRelease(xNow, m_fields->m_prevX)) {
+            this->handleButton(false, 3, true);
+        }
+
+        // Y
+        if (edge(yNow, m_fields->m_prevY)) {
+            this->handleButton(true, 4, true);
+        }
+        if (edgeRelease(yNow, m_fields->m_prevY)) {
+            this->handleButton(false, 4, true);
+        }
+
+        // Shoulders / triggers
+        if (edge(lbNow, m_fields->m_prevLB)) this->handleButton(true, 5, true);
+        if (edgeRelease(lbNow, m_fields->m_prevLB)) this->handleButton(false, 5, true);
+        if (edge(rbNow, m_fields->m_prevRB)) this->handleButton(true, 6, true);
+        if (edgeRelease(rbNow, m_fields->m_prevRB)) this->handleButton(false, 6, true);
+        if (edge(ltNow, m_fields->m_prevLT)) this->handleButton(true, 7, true);
+        if (edgeRelease(ltNow, m_fields->m_prevLT)) this->handleButton(false, 7, true);
+        if (edge(rtNow, m_fields->m_prevRT)) this->handleButton(true, 8, true);
+        if (edgeRelease(rtNow, m_fields->m_prevRT)) this->handleButton(false, 8, true);
+
+        // Menu/Start should pause like PC
+        if (edge(menuNow, m_fields->m_prevMenu)) {
+            this->handleButton(true, 9, true);
             this->pauseGame(false);
         }
+        if (edgeRelease(menuNow, m_fields->m_prevMenu)) {
+            this->handleButton(false, 9, true);
+        }
+
+        // D-pad
+        if (edge(upNow, m_fields->m_prevUp)) this->handleButton(true, 10, true);
+        if (edgeRelease(upNow, m_fields->m_prevUp)) this->handleButton(false, 10, true);
+        if (edge(downNow, m_fields->m_prevDown)) this->handleButton(true, 11, true);
+        if (edgeRelease(downNow, m_fields->m_prevDown)) this->handleButton(false, 11, true);
+        if (edge(leftNow, m_fields->m_prevLeft)) this->handleButton(true, 12, true);
+        if (edgeRelease(leftNow, m_fields->m_prevLeft)) this->handleButton(false, 12, true);
+        if (edge(rightNow, m_fields->m_prevRight)) this->handleButton(true, 13, true);
+        if (edgeRelease(rightNow, m_fields->m_prevRight)) this->handleButton(false, 13, true);
     }
 
     void onExit() {
@@ -139,6 +263,9 @@ class $modify(MFIMenuLayer, MenuLayer) {
         
         // Initialize MFI controller support
         MFIControllerManager::initialize();
+
+        // Force GD's controller mode based on current connection state (drives PC-like prompts)
+        mfisupport::onControllerConnectionChanged(MFIControllerManager::isControllerConnected());
         
         log::info("=== MFI: MenuLayer::init() complete ===");
         
