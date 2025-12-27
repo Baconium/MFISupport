@@ -133,15 +133,22 @@ class $modify(MFIPlayLayer, PlayLayer) {
         const bool leftNow = s.dpadLeft;
         const bool rightNow = s.dpadRight;
 
-        auto edge = [&](bool now, bool& prev) {
-            bool pressed = now && !prev;
+        // Compute press/release using previous state snapshot,
+        // then mutate prev once to avoid missing releases.
+        auto processButton = [&](bool now, bool& prev, int id, bool pauseOnPress = false) {
+            bool was = prev;
+            bool pressed = now && !was;
+            bool released = !now && was;
+            if (pressed) {
+                this->handleButton(true, id, true);
+                if (pauseOnPress) {
+                    this->pauseGame(false);
+                }
+            }
+            if (released) {
+                this->handleButton(false, id, true);
+            }
             prev = now;
-            return pressed;
-        };
-        auto edgeRelease = [&](bool now, bool& prev) {
-            bool released = !now && prev;
-            prev = now;
-            return released;
         };
 
         // Feed ALL buttons into GD's controller pipeline (PC-like).
@@ -150,65 +157,31 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // If a specific id differs on your build, we can adjust after a quick test.
 
         // A (jump)
-        if (edge(aNow, m_fields->m_prevA)) {
-            this->handleButton(true, 1, true);
-        }
-        if (edgeRelease(aNow, m_fields->m_prevA)) {
-            this->handleButton(false, 1, true);
-        }
+        processButton(aNow, m_fields->m_prevA, 1);
 
         // B
-        if (edge(bNow, m_fields->m_prevB)) {
-            this->handleButton(true, 2, true);
-        }
-        if (edgeRelease(bNow, m_fields->m_prevB)) {
-            this->handleButton(false, 2, true);
-        }
+        processButton(bNow, m_fields->m_prevB, 2);
 
         // X
-        if (edge(xNow, m_fields->m_prevX)) {
-            this->handleButton(true, 3, true);
-        }
-        if (edgeRelease(xNow, m_fields->m_prevX)) {
-            this->handleButton(false, 3, true);
-        }
+        processButton(xNow, m_fields->m_prevX, 3);
 
         // Y
-        if (edge(yNow, m_fields->m_prevY)) {
-            this->handleButton(true, 4, true);
-        }
-        if (edgeRelease(yNow, m_fields->m_prevY)) {
-            this->handleButton(false, 4, true);
-        }
+        processButton(yNow, m_fields->m_prevY, 4);
 
         // Shoulders / triggers
-        if (edge(lbNow, m_fields->m_prevLB)) this->handleButton(true, 5, true);
-        if (edgeRelease(lbNow, m_fields->m_prevLB)) this->handleButton(false, 5, true);
-        if (edge(rbNow, m_fields->m_prevRB)) this->handleButton(true, 6, true);
-        if (edgeRelease(rbNow, m_fields->m_prevRB)) this->handleButton(false, 6, true);
-        if (edge(ltNow, m_fields->m_prevLT)) this->handleButton(true, 7, true);
-        if (edgeRelease(ltNow, m_fields->m_prevLT)) this->handleButton(false, 7, true);
-        if (edge(rtNow, m_fields->m_prevRT)) this->handleButton(true, 8, true);
-        if (edgeRelease(rtNow, m_fields->m_prevRT)) this->handleButton(false, 8, true);
+        processButton(lbNow, m_fields->m_prevLB, 5);
+        processButton(rbNow, m_fields->m_prevRB, 6);
+        processButton(ltNow, m_fields->m_prevLT, 7);
+        processButton(rtNow, m_fields->m_prevRT, 8);
 
         // Menu/Start should pause like PC
-        if (edge(menuNow, m_fields->m_prevMenu)) {
-            this->handleButton(true, 9, true);
-            this->pauseGame(false);
-        }
-        if (edgeRelease(menuNow, m_fields->m_prevMenu)) {
-            this->handleButton(false, 9, true);
-        }
+        processButton(menuNow, m_fields->m_prevMenu, 9, true);
 
         // D-pad
-        if (edge(upNow, m_fields->m_prevUp)) this->handleButton(true, 10, true);
-        if (edgeRelease(upNow, m_fields->m_prevUp)) this->handleButton(false, 10, true);
-        if (edge(downNow, m_fields->m_prevDown)) this->handleButton(true, 11, true);
-        if (edgeRelease(downNow, m_fields->m_prevDown)) this->handleButton(false, 11, true);
-        if (edge(leftNow, m_fields->m_prevLeft)) this->handleButton(true, 12, true);
-        if (edgeRelease(leftNow, m_fields->m_prevLeft)) this->handleButton(false, 12, true);
-        if (edge(rightNow, m_fields->m_prevRight)) this->handleButton(true, 13, true);
-        if (edgeRelease(rightNow, m_fields->m_prevRight)) this->handleButton(false, 13, true);
+        processButton(upNow, m_fields->m_prevUp, 10);
+        processButton(downNow, m_fields->m_prevDown, 11);
+        processButton(leftNow, m_fields->m_prevLeft, 12);
+        processButton(rightNow, m_fields->m_prevRight, 13);
     }
 
     void onExit() {
@@ -226,6 +199,14 @@ class $modify(MFIPlayLayer, PlayLayer) {
 #include <Geode/modify/MenuLayer.hpp>
 
 class $modify(MFIMenuLayer, MenuLayer) {
+    struct Fields {
+        cocos2d::CCLabelBMFont* m_controllerHint = nullptr;
+        bool m_prevConnected = false;
+        bool m_prevA = false;
+        bool m_prevB = false;
+        cocos2d::CCNode* m_glyphOverlay = nullptr;
+    };
+
     bool init() {
         log::info("=== MFI: MenuLayer::init() called ===");
         
@@ -241,6 +222,10 @@ class $modify(MFIMenuLayer, MenuLayer) {
 
         // Force GD's controller mode based on current connection state (drives PC-like prompts)
         mfisupport::onControllerConnectionChanged(MFIControllerManager::isControllerConnected());
+
+        m_fields->m_prevConnected = MFIControllerManager::isControllerConnected();
+        this->updateHint();
+        this->updateGlyphOverlay();
         
         log::info("=== MFI: MenuLayer::init() complete ===");
         
@@ -258,6 +243,111 @@ class $modify(MFIMenuLayer, MenuLayer) {
                     s.buttonA, s.buttonB, s.dpadUp, s.dpadDown, s.dpadLeft, s.dpadRight);
             }
         }
+
+        // Toggle hints when connection changes
+        bool connected = MFIControllerManager::isControllerConnected();
+        if (connected != m_fields->m_prevConnected) {
+            m_fields->m_prevConnected = connected;
+            this->updateHint();
+            this->updateGlyphOverlay();
+        }
+
+        // Map A/B press edges to common main-menu actions
+        if (connected) {
+            const auto& s = MFIControllerManager::getState();
+            bool aNow = s.buttonA;
+            bool bNow = s.buttonB;
+            bool aPressed = aNow && !m_fields->m_prevA;
+            bool bPressed = bNow && !m_fields->m_prevB;
+            if (aPressed) {
+                log::info("MFI: MenuLayer - A pressed -> onPlay()");
+                this->onPlay(nullptr);
+            }
+            if (bPressed) {
+                log::info("MFI: MenuLayer - B pressed (no action on main menu)");
+            }
+            m_fields->m_prevA = aNow;
+            m_fields->m_prevB = bNow;
+        } else {
+            m_fields->m_prevA = false;
+            m_fields->m_prevB = false;
+        }
+    }
+
+    void updateHint() {
+        bool connected = MFIControllerManager::isControllerConnected();
+        if (connected) {
+            if (!m_fields->m_controllerHint) {
+                auto* label = cocos2d::CCLabelBMFont::create("A: Select    B: Back", "bigFont.fnt");
+                if (label) {
+                    label->setScale(0.45f);
+                    auto vs = cocos2d::CCDirector::sharedDirector()->getWinSize();
+                    label->setAnchorPoint({1.f, 0.f});
+                    label->setPosition({vs.width - 10.f, 10.f});
+                    label->setColor({255, 255, 255});
+                    this->addChild(label, 9999);
+                    m_fields->m_controllerHint = label;
+                    log::info("MFI: MenuLayer controller hints shown");
+                }
+            }
+        } else {
+            if (m_fields->m_controllerHint) {
+                m_fields->m_controllerHint->removeFromParentAndCleanup(true);
+                m_fields->m_controllerHint = nullptr;
+                log::info("MFI: MenuLayer controller hints hidden");
+            }
+        }
+    }
+
+    cocos2d::CCSprite* createGlyph(char letter) {
+        auto* circle = cocos2d::CCSprite::create("circle.png");
+        if (!circle) return nullptr;
+        circle->setScale(0.3f);
+        auto* label = cocos2d::CCLabelBMFont::create(std::string(1, letter).c_str(), "bigFont.fnt");
+        if (!label) return nullptr;
+        label->setScale(0.4f);
+        label->setColor({0,0,0});
+        auto* node = cocos2d::CCNode::create();
+        node->addChild(circle);
+        label->setPosition(circle->getContentSize() * 0.5f);
+        node->addChild(label);
+        // Render node into a CCSprite via CCRenderTexture would be heavy; return circle with label attached
+        // Caller should treat returned CCNode*; overload with CCSprite* for simplicity here.
+        return reinterpret_cast<cocos2d::CCSprite*>(node);
+    }
+
+    void updateGlyphOverlay() {
+        bool connected = MFIControllerManager::isControllerConnected();
+        if (connected) {
+            if (!m_fields->m_glyphOverlay) {
+                auto* overlay = cocos2d::CCNode::create();
+                auto vs = cocos2d::CCDirector::sharedDirector()->getWinSize();
+                // Create A/B glyphs
+                auto* aGlyph = createGlyph('A');
+                auto* bGlyph = createGlyph('B');
+                if (aGlyph && bGlyph) {
+                    aGlyph->setPosition({vs.width - 60.f, 22.f});
+                    bGlyph->setPosition({vs.width - 30.f, 22.f});
+                    overlay->addChild(aGlyph);
+                    overlay->addChild(bGlyph);
+                    // Add hint text
+                    auto* hint = cocos2d::CCLabelBMFont::create("Select  Back", "bigFont.fnt");
+                    hint->setScale(0.35f);
+                    hint->setAnchorPoint({1.f,0.f});
+                    hint->setPosition({vs.width - 70.f, 10.f});
+                    overlay->addChild(hint);
+                    this->addChild(overlay, 9998);
+                    m_fields->m_glyphOverlay = overlay;
+                    log::info("MFI: MenuLayer glyph overlay shown");
+                }
+            }
+        } else {
+            if (m_fields->m_glyphOverlay) {
+                m_fields->m_glyphOverlay->removeFromParentAndCleanup(true);
+                m_fields->m_glyphOverlay = nullptr;
+                log::info("MFI: MenuLayer glyph overlay hidden");
+            }
+        }
     }
 };
 
@@ -265,9 +355,44 @@ class $modify(MFIMenuLayer, MenuLayer) {
 #include <Geode/modify/PauseLayer.hpp>
 
 class $modify(MFIPauseLayer, PauseLayer) {
+    struct Fields {
+        cocos2d::CCLabelBMFont* m_controllerHint = nullptr;
+        bool m_prevConnected = false;
+        bool m_prevUp = false;
+        bool m_prevDown = false;
+    };
     void onEnter() {
         PauseLayer::onEnter();
         log::info("=== MFI: PauseLayer::onEnter() ===");
+        m_fields->m_prevConnected = MFIControllerManager::isControllerConnected();
+        this->updateHint();
+    }
+    void update(float dt) {
+        PauseLayer::update(dt);
+        bool connected = MFIControllerManager::isControllerConnected();
+        if (connected != m_fields->m_prevConnected) {
+            m_fields->m_prevConnected = connected;
+            this->updateHint();
+        }
+        // D-pad navigation parity
+        if (connected) {
+            const auto& s = MFIControllerManager::getState();
+            bool upPressed = s.dpadUp && !m_fields->m_prevUp;
+            bool downPressed = s.dpadDown && !m_fields->m_prevDown;
+            if (upPressed) {
+                log::info("MFI: PauseLayer - Dpad Up -> KEY_UpArrow");
+                this->keyDown(cocos2d::KEY_UpArrow);
+            }
+            if (downPressed) {
+                log::info("MFI: PauseLayer - Dpad Down -> KEY_DownArrow");
+                this->keyDown(cocos2d::KEY_DownArrow);
+            }
+            m_fields->m_prevUp = s.dpadUp;
+            m_fields->m_prevDown = s.dpadDown;
+        } else {
+            m_fields->m_prevUp = false;
+            m_fields->m_prevDown = false;
+        }
     }
     void keyDown(cocos2d::enumKeyCodes key) {
         log::debug("=== MFI: PauseLayer::keyDown() called with key={} ===", (int)key);
@@ -290,6 +415,31 @@ class $modify(MFIPauseLayer, PauseLayer) {
         if (state.buttonB) {
             log::info("MFI: PauseLayer::keyDown() - Button B detected (acting as back/cancel)");
             this->onQuit(nullptr);
+        }
+    }
+
+    void updateHint() {
+        bool connected = MFIControllerManager::isControllerConnected();
+        if (connected) {
+            if (!m_fields->m_controllerHint) {
+                auto* label = cocos2d::CCLabelBMFont::create("A: Resume    B: Quit", "bigFont.fnt");
+                if (label) {
+                    label->setScale(0.5f);
+                    auto vs = cocos2d::CCDirector::sharedDirector()->getWinSize();
+                    label->setAnchorPoint({0.5f, 0.f});
+                    label->setPosition({vs.width * 0.5f, 10.f});
+                    label->setColor({255, 255, 255});
+                    this->addChild(label, 9999);
+                    m_fields->m_controllerHint = label;
+                    log::info("MFI: PauseLayer controller hints shown");
+                }
+            }
+        } else {
+            if (m_fields->m_controllerHint) {
+                m_fields->m_controllerHint->removeFromParentAndCleanup(true);
+                m_fields->m_controllerHint = nullptr;
+                log::info("MFI: PauseLayer controller hints hidden");
+            }
         }
     }
 };
