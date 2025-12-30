@@ -331,15 +331,15 @@ class $modify(MFIMenuLayer, MenuLayer) {
             // X button - Open Icon Kit (Character Customization)  
             if (xPressed) {
                 log::info("MFI: MenuLayer - X pressed");
-                // Use 'g' key as shortcut if available, otherwise navigate and press
-                this->keyDown(cocos2d::KEY_g);
+                // Use Tab to navigate to next menu section
+                this->keyDown(cocos2d::KEY_Tab);
             }
             
             // Y button - Open Creator Menu (Online/Editor)
             if (yPressed) {
                 log::info("MFI: MenuLayer - Y pressed");
-                // Use 'c' key as shortcut if available
-                this->keyDown(cocos2d::KEY_c);
+                // Use Tab to navigate to next menu section
+                this->keyDown(cocos2d::KEY_Tab);
             }
             
             // B button - Exit Game (with confirmation)
@@ -352,8 +352,8 @@ class $modify(MFIMenuLayer, MenuLayer) {
             // Start/Menu button - Open Options/Settings
             if (menuPressed) {
                 log::info("MFI: MenuLayer - Start pressed");
-                // Use 'o' key as shortcut for options
-                this->keyDown(cocos2d::KEY_o);
+                // Use Tab to navigate to next menu section
+                this->keyDown(cocos2d::KEY_Tab);
             }
             
             // D-pad navigation - simulate arrow keys for menu navigation
