@@ -182,7 +182,7 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // Y button - Remove practice checkpoint (manual)
         if (yNow && !m_fields->m_prevY) {
             if (this->m_isPracticeMode && this->m_checkpointArray && this->m_checkpointArray->count() > 0) {
-                this->removeLastCheckpoint();
+                this->removeCheckpoint(true);
                 log::info("MFI: Y button - Removing practice checkpoint");
             }
         }
@@ -195,31 +195,31 @@ class $modify(MFIPlayLayer, PlayLayer) {
         // This uses a different approach since it's not typically a standard button
         // We'll use the shoulder buttons for practice mode controls in pause menu
         
-        // For platformer mode, handle left stick movement
+        // Handle left stick movement for platformer levels
+        // Since we can't easily detect platformer mode, we'll always enable it
+        // It won't affect classic levels since they ignore horizontal input
         const float deadzone = 0.2f;
-        if (this->m_gameState.m_currentGameMode == static_cast<int>(GameMode::Platformer)) {
-            float stickX = s.leftThumbstickX;
-            
-            // Only apply movement if stick moved significantly
-            if (fabs(stickX) > deadzone) {
-                // Simulate left/right movement for platformer
-                if (stickX < -deadzone && m_fields->m_leftStickX >= -deadzone) {
-                    // Started moving left
-                    this->handleButton(true, 12, true);  // Left
-                } else if (stickX > deadzone && m_fields->m_leftStickX <= deadzone) {
-                    // Started moving right
-                    this->handleButton(true, 13, true);  // Right
-                }
-            } else {
-                // Released stick
-                if (m_fields->m_leftStickX < -deadzone) {
-                    this->handleButton(false, 12, true);  // Release left
-                } else if (m_fields->m_leftStickX > deadzone) {
-                    this->handleButton(false, 13, true);  // Release right
-                }
+        float stickX = s.leftThumbstickX;
+        
+        // Only apply movement if stick moved significantly
+        if (fabs(stickX) > deadzone) {
+            // Simulate left/right movement for platformer
+            if (stickX < -deadzone && m_fields->m_leftStickX >= -deadzone) {
+                // Started moving left
+                this->handleButton(true, 12, true);  // Left
+            } else if (stickX > deadzone && m_fields->m_leftStickX <= deadzone) {
+                // Started moving right
+                this->handleButton(true, 13, true);  // Right
             }
-            m_fields->m_leftStickX = stickX;
+        } else {
+            // Released stick
+            if (m_fields->m_leftStickX < -deadzone) {
+                this->handleButton(false, 12, true);  // Release left
+            } else if (m_fields->m_leftStickX > deadzone) {
+                this->handleButton(false, 13, true);  // Release right
+            }
         }
+        m_fields->m_leftStickX = stickX;
 
         // D-pad for platformer control backup
         processButton(leftNow, m_fields->m_prevLeft, 12);

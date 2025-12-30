@@ -21,10 +21,10 @@ static void connectController(GCController* controller) {
     
     if (controller.extendedGamepad) {
         log::info("MFI Controller supports extended gamepad profile");
-    } else if (controller.gamepad) {
-        log::info("MFI Controller supports standard gamepad profile");
     } else if (controller.microGamepad) {
         log::info("MFI Controller supports micro gamepad profile");
+    } else {
+        log::info("MFI Controller: Unknown profile type");
     }
     
     s_currentController = controller;
@@ -34,20 +34,26 @@ static void connectController(GCController* controller) {
     // Notify C++ side so the game can switch to controller UI mode (PC-like prompts)
     mfisupport::onControllerConnectionChanged(true);
 
-    // iOS "pause/menu" button (matches Start on many controllers)
-    controller.controllerPausedHandler = ^(GCController* c) {
-        (void)c;
-        s_controllerState.buttonMenu = true;
-        log::info("MFI Controller Menu/Start triggered");
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            s_controllerState.buttonMenu = false;
-        });
-    };
-    
     // Set up input handlers for extended gamepad profile
     if (controller.extendedGamepad) {
         GCExtendedGamepad* gamepad = controller.extendedGamepad;
         log::info("MFI: Setting up extended gamepad handlers...");
+        
+        // Modern iOS 13+ menu button handler
+        if (@available(iOS 13.0, *)) {
+            if (gamepad.buttonMenu) {
+                log::info("MFI: Setting up Menu button handler");
+                gamepad.buttonMenu.valueChangedHandler = ^(GCControllerButtonInput* button, float value, BOOL pressed) {
+                    if (pressed) {
+                        s_controllerState.buttonMenu = true;
+                        log::info("MFI Controller Menu/Start triggered");
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                            s_controllerState.buttonMenu = false;
+                        });
+                    }
+                };
+            }
+        }
         
         // Button A (Jump/Select)
         log::info("MFI: Setting up Button A handler");
