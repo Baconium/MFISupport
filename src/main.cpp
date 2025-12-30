@@ -324,62 +324,62 @@ class $modify(MFIMenuLayer, MenuLayer) {
             // A button - Start/Play (Main Level Select)
             if (aPressed) {
                 log::info("MFI: MenuLayer - A pressed");
-                // Send enter key which should trigger the selected button
-                this->keyDown(cocos2d::KEY_Return);
+                // Send space key which should trigger the selected button
+                this->keyDown(cocos2d::KEY_Space);
             }
             
             // X button - Open Icon Kit (Character Customization)  
             if (xPressed) {
                 log::info("MFI: MenuLayer - X pressed");
-                // Use 'G' key as shortcut if available, otherwise navigate and press
-                this->keyDown(cocos2d::KEY_G);
+                // Use 'g' key as shortcut if available, otherwise navigate and press
+                this->keyDown(cocos2d::KEY_g);
             }
             
             // Y button - Open Creator Menu (Online/Editor)
             if (yPressed) {
                 log::info("MFI: MenuLayer - Y pressed");
-                // Use 'C' key as shortcut if available
-                this->keyDown(cocos2d::KEY_C);
+                // Use 'c' key as shortcut if available
+                this->keyDown(cocos2d::KEY_c);
             }
             
             // B button - Exit Game (with confirmation)
             if (bPressed) {
                 log::info("MFI: MenuLayer - B pressed");
                 // Use Escape/Backspace to exit or go back
-                this->keyDown(cocos2d::KEY_BackSpace);
+                this->keyDown(cocos2d::KEY_Backspace);
             }
             
             // Start/Menu button - Open Options/Settings
             if (menuPressed) {
                 log::info("MFI: MenuLayer - Start pressed");
-                // Use 'O' key as shortcut for options
-                this->keyDown(cocos2d::KEY_O);
+                // Use 'o' key as shortcut for options
+                this->keyDown(cocos2d::KEY_o);
             }
             
             // D-pad navigation - simulate arrow keys for menu navigation
             if (upPressed) {
-                this->keyDown(cocos2d::KEY_ArrowUp);
+                this->keyDown(cocos2d::KEY_Up);
                 m_fields->m_prevUp = true;  // Prevent key repeat
             } else if (!upNow) {
                 m_fields->m_prevUp = false;
             }
             
             if (downPressed) {
-                this->keyDown(cocos2d::KEY_ArrowDown);
+                this->keyDown(cocos2d::KEY_Down);
                 m_fields->m_prevDown = true;
             } else if (!downNow) {
                 m_fields->m_prevDown = false;
             }
             
             if (leftPressed) {
-                this->keyDown(cocos2d::KEY_ArrowLeft);
+                this->keyDown(cocos2d::KEY_Left);
                 m_fields->m_prevLeft = true;
             } else if (!leftNow) {
                 m_fields->m_prevLeft = false;
             }
             
             if (rightPressed) {
-                this->keyDown(cocos2d::KEY_ArrowRight);
+                this->keyDown(cocos2d::KEY_Right);
                 m_fields->m_prevRight = true;
             } else if (!rightNow) {
                 m_fields->m_prevRight = false;
@@ -557,11 +557,11 @@ class $modify(MFIPauseLayer, PauseLayer) {
             // D-pad navigation
             if (upPressed) {
                 log::info("MFI: PauseLayer - Dpad Up");
-                this->keyDown(cocos2d::KEY_ArrowUp);
+                this->keyDown(cocos2d::KEY_Up);
             }
             if (downPressed) {
                 log::info("MFI: PauseLayer - Dpad Down");
-                this->keyDown(cocos2d::KEY_ArrowDown);
+                this->keyDown(cocos2d::KEY_Down);
             }
             
             // Update previous state
@@ -678,11 +678,11 @@ class $modify(MFILevelSelectLayer, LevelSelectLayer) {
         // D-pad navigation - Scroll through levels
         if (leftPressed || upPressed) {
             log::info("MFI: LevelSelectLayer - Previous Level");
-            this->keyDown(cocos2d::KEY_ArrowLeft);
+            this->keyDown(cocos2d::KEY_Left);
         }
         if (rightPressed || downPressed) {
             log::info("MFI: LevelSelectLayer - Next Level");
-            this->keyDown(cocos2d::KEY_ArrowRight);
+            this->keyDown(cocos2d::KEY_Right);
         }
         
         // Update previous state
@@ -764,16 +764,16 @@ class $modify(MFICreatorLayer, CreatorLayer) {
         
         // D-pad navigation for menu buttons
         if (upPressed) {
-            this->keyDown(cocos2d::KEY_ArrowUp);
+            this->keyDown(cocos2d::KEY_Up);
         }
         if (downPressed) {
-            this->keyDown(cocos2d::KEY_ArrowDown);
+            this->keyDown(cocos2d::KEY_Down);
         }
         if (leftPressed) {
-            this->keyDown(cocos2d::KEY_ArrowLeft);
+            this->keyDown(cocos2d::KEY_Left);
         }
         if (rightPressed) {
-            this->keyDown(cocos2d::KEY_ArrowRight);
+            this->keyDown(cocos2d::KEY_Right);
         }
         
         // Update previous state
