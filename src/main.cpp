@@ -25,11 +25,8 @@ namespace {
 
 namespace mfisupport {
     void onControllerConnectionChanged(bool connected) {
-        // Always log as connected to force controller UI mode
-        log::info("MFI: Controller UI mode FORCED -> true (always show button prompts)");
-        // In a real implementation, you would set GameManager's controller flag here
-        // Since the bindings don't expose it, button textures may not appear unless
-        // the game itself detects a controller or has internal controller support
+        log::info("MFI: Controller connection changed -> {}", connected);
+        setGDControllerMode(connected);
     }
 }
 
@@ -269,9 +266,8 @@ class $modify(MFIMenuLayer, MenuLayer) {
         // Initialize MFI controller support
         MFIControllerManager::initialize();
 
-        // Force GD's controller mode to always be true - this ensures button textures are always visible
-        // We do this regardless of whether a controller is actually connected
-        mfisupport::onControllerConnectionChanged(true);
+        // Signal current connection state to GD
+        mfisupport::onControllerConnectionChanged(MFIControllerManager::isControllerConnected());
 
         m_fields->m_prevConnected = MFIControllerManager::isControllerConnected();
         this->updateHint();
@@ -320,49 +316,73 @@ class $modify(MFIMenuLayer, MenuLayer) {
             bool xPressed = xNow && !m_fields->m_prevX;
             bool yPressed = yNow && !m_fields->m_prevY;
             bool menuPressed = menuNow && !m_fields->m_prevMenu;
+            bool upPressed = upNow && !m_fields->m_prevUp;
+            bool downPressed = downNow && !m_fields->m_prevDown;
+            bool leftPressed = leftNow && !m_fields->m_prevLeft;
+            bool rightPressed = rightNow && !m_fields->m_prevRight;
             
             // A button - Start/Play (Main Level Select)
             if (aPressed) {
-                log::info("MFI: MenuLayer - A pressed -> onPlay()");
-                this->onPlay(nullptr);
+                log::info("MFI: MenuLayer - A pressed");
+                // Send enter key which should trigger the selected button
+                this->keyDown(cocos2d::KEY_Return);
             }
             
-            // X button - Open Icon Kit (Character Customization)
+            // X button - Open Icon Kit (Character Customization)  
             if (xPressed) {
-                log::info("MFI: MenuLayer - X pressed -> onGarage()");
-                this->onGarage(nullptr);
+                log::info("MFI: MenuLayer - X pressed");
+                // Use 'G' key as shortcut if available, otherwise navigate and press
+                this->keyDown(cocos2d::KEY_G);
             }
             
             // Y button - Open Creator Menu (Online/Editor)
             if (yPressed) {
-                log::info("MFI: MenuLayer - Y pressed -> onCreator()");
-                this->onCreator(nullptr);
+                log::info("MFI: MenuLayer - Y pressed");
+                // Use 'C' key as shortcut if available
+                this->keyDown(cocos2d::KEY_C);
             }
             
             // B button - Exit Game (with confirmation)
             if (bPressed) {
-                log::info("MFI: MenuLayer - B pressed -> onQuit()");
-                this->onQuit(nullptr);
+                log::info("MFI: MenuLayer - B pressed");
+                // Use Escape/Backspace to exit or go back
+                this->keyDown(cocos2d::KEY_BackSpace);
             }
             
             // Start/Menu button - Open Options/Settings
             if (menuPressed) {
-                log::info("MFI: MenuLayer - Start pressed -> onOptions()");
-                this->onOptions(nullptr);
+                log::info("MFI: MenuLayer - Start pressed");
+                // Use 'O' key as shortcut for options
+                this->keyDown(cocos2d::KEY_O);
             }
             
             // D-pad navigation - simulate arrow keys for menu navigation
-            if (upNow && !m_fields->m_prevUp) {
+            if (upPressed) {
                 this->keyDown(cocos2d::KEY_ArrowUp);
+                m_fields->m_prevUp = true;  // Prevent key repeat
+            } else if (!upNow) {
+                m_fields->m_prevUp = false;
             }
-            if (downNow && !m_fields->m_prevDown) {
+            
+            if (downPressed) {
                 this->keyDown(cocos2d::KEY_ArrowDown);
+                m_fields->m_prevDown = true;
+            } else if (!downNow) {
+                m_fields->m_prevDown = false;
             }
-            if (leftNow && !m_fields->m_prevLeft) {
+            
+            if (leftPressed) {
                 this->keyDown(cocos2d::KEY_ArrowLeft);
+                m_fields->m_prevLeft = true;
+            } else if (!leftNow) {
+                m_fields->m_prevLeft = false;
             }
-            if (rightNow && !m_fields->m_prevRight) {
+            
+            if (rightPressed) {
                 this->keyDown(cocos2d::KEY_ArrowRight);
+                m_fields->m_prevRight = true;
+            } else if (!rightNow) {
+                m_fields->m_prevRight = false;
             }
             
             m_fields->m_prevA = aNow;
@@ -370,10 +390,6 @@ class $modify(MFIMenuLayer, MenuLayer) {
             m_fields->m_prevX = xNow;
             m_fields->m_prevY = yNow;
             m_fields->m_prevMenu = menuNow;
-            m_fields->m_prevUp = upNow;
-            m_fields->m_prevDown = downNow;
-            m_fields->m_prevLeft = leftNow;
-            m_fields->m_prevRight = rightNow;
         } else {
             m_fields->m_prevA = false;
             m_fields->m_prevB = false;
@@ -391,42 +407,31 @@ class $modify(MFIMenuLayer, MenuLayer) {
         bool connected = MFIControllerManager::isControllerConnected();
         if (connected) {
             if (!m_fields->m_controllerHint) {
-                auto* label = cocos2d::CCLabelBMFont::create("A: Play  X: Icon Kit  Y: Creator  B: Exit  Start: Options", "bigFont.fnt");
+                // Show button legend at bottom of screen: "A: PLAY  X: ICON KIT  Y: CREATOR  B: EXIT  START: OPTIONS"
+                auto* label = cocos2d::CCLabelBMFont::create("A: PLAY  X: GALLERY  Y: CREATOR  B: EXIT  START: OPTIONS", "goldFont.fnt");
                 if (label) {
-                    label->setScale(0.35f);
+                    label->setScale(0.4f);
                     auto vs = cocos2d::CCDirector::sharedDirector()->getWinSize();
-                    label->setAnchorPoint({1.f, 0.f});
-                    label->setPosition({vs.width - 10.f, 10.f});
+                    label->setAnchorPoint({0.5f, 0.f});
+                    label->setPosition({vs.width * 0.5f, 10.f});
                     label->setColor({255, 255, 255});
                     this->addChild(label, 9999);
                     m_fields->m_controllerHint = label;
-                    log::info("MFI: MenuLayer controller hints shown");
+                    log::info("MFI: MenuLayer button hints shown");
                 }
             }
         } else {
             if (m_fields->m_controllerHint) {
                 m_fields->m_controllerHint->removeFromParentAndCleanup(true);
                 m_fields->m_controllerHint = nullptr;
-                log::info("MFI: MenuLayer controller hints hidden");
+                log::info("MFI: MenuLayer hints hidden");
             }
         }
     }
 
     cocos2d::CCSprite* createGlyph(char letter) {
-        auto* circle = cocos2d::CCSprite::create("circle.png");
-        if (!circle) return nullptr;
-        circle->setScale(0.3f);
-        auto* label = cocos2d::CCLabelBMFont::create(std::string(1, letter).c_str(), "bigFont.fnt");
-        if (!label) return nullptr;
-        label->setScale(0.4f);
-        label->setColor({0,0,0});
-        auto* node = cocos2d::CCNode::create();
-        node->addChild(circle);
-        label->setPosition(circle->getContentSize() * 0.5f);
-        node->addChild(label);
-        // Render node into a CCSprite via CCRenderTexture would be heavy; return circle with label attached
-        // Caller should treat returned CCNode*; overload with CCSprite* for simplicity here.
-        return reinterpret_cast<cocos2d::CCSprite*>(node);
+        // Not currently used - game should render its own button prompts
+        return nullptr;
     }
 
     void updateGlyphOverlay() {
@@ -435,24 +440,10 @@ class $modify(MFIMenuLayer, MenuLayer) {
             if (!m_fields->m_glyphOverlay) {
                 auto* overlay = cocos2d::CCNode::create();
                 auto vs = cocos2d::CCDirector::sharedDirector()->getWinSize();
-                // Create A/B glyphs
-                auto* aGlyph = createGlyph('A');
-                auto* bGlyph = createGlyph('B');
-                if (aGlyph && bGlyph) {
-                    aGlyph->setPosition({vs.width - 60.f, 22.f});
-                    bGlyph->setPosition({vs.width - 30.f, 22.f});
-                    overlay->addChild(aGlyph);
-                    overlay->addChild(bGlyph);
-                    // Add hint text
-                    auto* hint = cocos2d::CCLabelBMFont::create("Select  Back", "bigFont.fnt");
-                    hint->setScale(0.35f);
-                    hint->setAnchorPoint({1.f,0.f});
-                    hint->setPosition({vs.width - 70.f, 10.f});
-                    overlay->addChild(hint);
-                    this->addChild(overlay, 9998);
-                    m_fields->m_glyphOverlay = overlay;
-                    log::info("MFI: MenuLayer glyph overlay shown");
-                }
+                // Just create an empty overlay node - the game should render its own button prompts
+                this->addChild(overlay, 9998);
+                m_fields->m_glyphOverlay = overlay;
+                log::info("MFI: MenuLayer glyph overlay ready");
             }
         } else {
             if (m_fields->m_glyphOverlay) {
@@ -460,6 +451,25 @@ class $modify(MFIMenuLayer, MenuLayer) {
                 m_fields->m_glyphOverlay = nullptr;
                 log::info("MFI: MenuLayer glyph overlay hidden");
             }
+        }
+    }
+
+    void keyDown(cocos2d::enumKeyCodes key) {
+        log::debug("MFI: MenuLayer::keyDown() called with key={}", (int)key);
+        MenuLayer::keyDown(key);
+        
+        if (!MFIControllerManager::isControllerConnected()) {
+            return;
+        }
+        
+        const auto& state = MFIControllerManager::getState();
+        
+        // Map controller buttons to menu actions via key simulation
+        if (state.buttonA) {
+            log::info("MFI: MenuLayer::keyDown() - Button A (simulating space/select)");
+        }
+        if (state.buttonB) {
+            log::info("MFI: MenuLayer::keyDown() - Button B (simulating escape/back)");
         }
     }
 };
