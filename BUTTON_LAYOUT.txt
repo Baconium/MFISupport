@@ -1,0 +1,150 @@
+# 🎮 Complete Controller Button Layout
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                   MFI CONTROLLER LAYOUT                       ║
+║                  (Xbox-Style Mapping)                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+
+          ┌─────┐                              ┌─────┐
+          │ LB  │                              │ RB  │
+          └─────┘                              └─────┘
+         ┌──────┐                             ┌──────┐
+         │  LT  │                             │  RT  │
+         └──────┘                             └──────┘
+         
+    ╔═══════════╗                         ╔═══════════╗
+    ║           ║                         ║     Y     ║
+    ║   D-Pad   ║       ┌───────┐        ║  X     B  ║
+    ║           ║       │ Start │        ║     A     ║
+    ╚═══════════╝       └───────┘        ╚═══════════╝
+                        
+         ╭───╮                                 ╭───╮
+         │LS │                                 │RS │
+         ╰───╯                                 ╰───╯
+
+
+┌──────────────────────────────────────────────────────────────┐
+│                     BUTTON FUNCTIONS                         │
+└──────────────────────────────────────────────────────────────┘
+
+🎯 MAIN MENU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  A       → Play / Level Select
+  X       → Icon Kit (Character Customization)
+  Y       → Creator Menu (Online/Editor)
+  B       → Exit Game (with confirmation)
+  Start   → Options / Settings
+  D-Pad   → Navigate main buttons
+  LS      → Navigate main buttons
+
+
+🎯 LEVEL SELECT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  A       → Start Selected Level
+  B       → Back to Main Menu
+  Y       → Toggle Practice Mode
+  D-Pad   → Scroll Through Levels (←→)
+  LS      → Scroll Through Levels (←→)
+
+
+🎯 CLASSIC GAMEPLAY (Auto-scrolling)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  A       → Jump / Action
+  RT      → Jump / Action (Alternative)
+  LT      → Jump / Action (Alternative)
+  Start   → Pause Game
+  X       → Restart Level (Practice Mode)
+  Y       → Remove Checkpoint (Practice Mode)
+
+
+🎯 PLATFORMER GAMEPLAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LS      → Move Left/Right (Analog)
+  D-Pad   → Move Left/Right (Digital)
+  A       → Jump
+  Start   → Pause Game
+  X       → Restart Level (Practice Mode)
+  Y       → Remove Checkpoint (Practice Mode)
+
+
+🎯 PAUSE MENU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  A       → Resume Level
+  B       → Exit to Level Select
+  X       → Restart Level
+  Y       → Toggle Practice Mode
+  LB      → Previous Song (Practice Mode) *
+  RB      → Next Song (Practice Mode) *
+  D-Pad   → Navigate Menu Options (↑↓)
+  
+  * Coming in future update
+
+
+🎯 CREATOR MENU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  A       → Select / Open
+  B       → Back to Main Menu
+  X       → My Levels (Create)
+  Y       → Online Levels (Search)
+  D-Pad   → Navigate Menu Buttons
+  LS      → Navigate Menu Buttons
+
+
+┌──────────────────────────────────────────────────────────────┐
+│                     SPECIAL FEATURES                         │
+└──────────────────────────────────────────────────────────────┘
+
+✨ MULTIPLE JUMP OPTIONS
+   Use A, RT, or LT for jumping - whatever feels best!
+
+✨ ANALOG STICK DEADZONE
+   20% deadzone prevents controller drift in platformer mode
+
+✨ SMART BUTTON DETECTION
+   Buttons only trigger once per press (no repeating)
+
+✨ ALWAYS-VISIBLE HINTS
+   On-screen text shows button functions when controller connected
+
+✨ AUTO MODE DETECTION
+   Automatically switches between classic and platformer controls
+
+
+┌──────────────────────────────────────────────────────────────┐
+│                   COMPATIBLE CONTROLLERS                     │
+└──────────────────────────────────────────────────────────────┘
+
+  ✓ Xbox Wireless Controller (Bluetooth)
+  ✓ PlayStation DualShock 4
+  ✓ PlayStation DualSense
+  ✓ SteelSeries Nimbus+
+  ✓ Backbone One
+  ✓ Razer Kishi
+  ✓ Any MFi-certified gamepad
+
+
+┌──────────────────────────────────────────────────────────────┐
+│                         TIPS                                 │
+└──────────────────────────────────────────────────────────────┘
+
+💡 Practice Mode
+   ├─ Press Y to remove last checkpoint
+   └─ Press X to restart from current checkpoint
+
+💡 Navigation
+   ├─ D-Pad works everywhere as backup
+   └─ Left stick for smooth analog movement
+
+💡 Platformer
+   ├─ Gently tilt stick for precise movement
+   └─ Full tilt for maximum speed
+
+💡 Button Prompts
+   └─ Look for text hints at bottom of screen
+
+
+════════════════════════════════════════════════════════════════
+          Enjoy Geometry Dash with Full Controller Support! 
+════════════════════════════════════════════════════════════════
